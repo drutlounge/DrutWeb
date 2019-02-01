@@ -158,15 +158,13 @@ handlers.sample = function(data,callback) {
 handlers.up = function(data,callback) {
     if (data.headers['status'] == 'na') {
         callback(200,{'ImGood':'ThanksForAsking uwu'})
-    } else if (data.headers['headers.status'] == 'na') {
-        callback(200,{'ImGood':'ThanksForAsking uwu'})
     } else {
         callback(204)
     }
 };
 handlers.demosite = function(data,callback) {
     //Send a demo website
-    callback(200,"<body><h1>test</h1></body>","application/HTML")
+    callback(200,"<body><h1>test</h1></body>","text/HTML")
 }
 handlers.best = function(data,callback) {
     callback(200,"<head><link href='https://fonts.googleapis.com/css?family=Major+Mono+Display' rel='stylesheet'></head><body><style>body, html, h1 {font-family: 'Major Mono Display', monospace;}; h3{font-family: 'Major Mono Display', monospace; font-size: 24px}</style><h1>Mar is a cutie</h1><h3>❤</h3></body"),'application/HTML'
