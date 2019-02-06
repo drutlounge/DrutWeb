@@ -7,21 +7,23 @@ const col = require('./colourdat');
 //Quick console colours
 info = col.bg_blue+col.white
 request = col.bg_black+col.yellow
-warn = col.bg_red+col.white
+warn = col.bg_white+col.red
+errorc = col.bg_red+col.white
 success = col.bg_green+col.white
 none = col.reset+col.reset
 var exitVal = 0
 
 //Catch exit
 process.on('SIGINT', function() {
-    console.warn(warn+"[w] Exit requested - Press CTRL+C again to gracefully exit");
     if (exitVal) {
         console.warn(warn+"[w] Stopping server...")
         server.close()
+        console.warn(errorc+"[e] Server died")
         console.info(success+"[s] Server stopped")
         console.info(none+'Resetting terminal colour\n[i] Killing process')
         process.exit();
     } else {
+        console.warn(warn+"[w] Exit requested - Press CTRL+C again to gracefully exit");
         exitVal = 1
     }
 });
@@ -130,7 +132,16 @@ var server = http.createServer(function(req,res) {
 server.listen(config.port,config.ip,function(){
     console.log(success+'[s] Server is listening on ',col.inverse,config.ip+':'+config.port,none)
 })
-
+server.on('error',function(){
+    console.error(errorc+'[e] Failed to attach to the IP or port that was specified')
+    console.warn(warn+'[w] Exiting')
+    console.warn(warn+"[w] Stopping server...")
+    server.close()
+    console.warn(errorc+"[e] Server died")
+    console.info(success+"[s] Server stopped")
+    console.info(none+'Resetting terminal colour\n[i] Killing process')
+    process.exit();
+})
 
 
 /*
@@ -167,7 +178,7 @@ handlers.demosite = function(data,callback) {
     callback(200,"<body><h1>test</h1></body>","text/HTML")
 }
 handlers.best = function(data,callback) {
-    callback(200,"<head><link href='https://fonts.googleapis.com/css?family=Major+Mono+Display' rel='stylesheet'></head><body><style>body, html, h1 {font-family: 'Major Mono Display', monospace;}; h3{font-family: 'Major Mono Display', monospace; font-size: 24px}</style><h1>Mar is a cutie</h1><h3>❤</h3></body"),'application/HTML'
+    callback(200,"<head><link href='https://fonts.googleapis.com/css?family=Major+Mono+Display' rel='stylesheet'></head><body><style>body, html, h1 {font-family: 'Major Mono Display', monospace;}; h3{font-family: 'Major Mono Display', monospace; font-size: 24px}</style><h1>Mar is a cutie</h1><h3>❤</h3></body",'application/HTML')
 }
 //Handler not found
 handlers.ohnoes = function(data,callback) {
