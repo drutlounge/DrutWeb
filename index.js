@@ -66,12 +66,15 @@ var httpserver = http.createServer(function(req,res) {
 });
 
 //HTTPS Server
-var httpsserver = https.createServer({'key':fs.readFileSync(config.keyloc).toString('utf8'),'cert':fs.readFileSync(config.certloc).toString('utf8')},function(req,res) {
-    if (config.secured == true) {
-        logic(req,res)
-    }
-});
-
+try {
+    var httpsserver = https.createServer({'key':fs.readFileSync(config.keyloc).toString('utf8'),'cert':fs.readFileSync(config.certloc).toString('utf8')},function(req,res) {
+        if (config.secured == true) {
+            logic(req,res)
+        }
+    });
+} catch (e) {
+    console.error(errorc+'[e] HTTPS is unavailable as the certificate files are unavailable, damaged or missing.')
+}
 
 //i'll make this more efficient in the future, but it doesn't impact api performance
 //Start the HTTP server
