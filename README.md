@@ -88,6 +88,8 @@ environments.NameOfMyConfig = {
     keyloc: (path of your private key)
 
 }
+```
+
 ## Dependancies
 None(ish)!
 
