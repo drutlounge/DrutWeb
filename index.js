@@ -17,7 +17,7 @@ var exitVal = 0
 process.on('SIGINT', function() {
     if (exitVal) {
         console.warn(warn+"[w] Stopping server...")
-        server.close()
+        httpserver.close()
         console.warn(errorc+"[e] Server died")
         console.info(success+"[s] Server stopped")
         console.info(none+'Resetting terminal colour\n[i] Killing process')
@@ -34,9 +34,11 @@ console.info(info+'[i] Firing up the engines!',none);
 //Any dependencies
 console.info(info+'[i] Calling in the troops (requiring dependencies)',none);
 const http          = require('http');
+const https         = require('https');
 const url           = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config        = require('./config');
+const fs            = require('fs');
 console.info('\nNJSAPIPROJ-V1-'+config.env+'\n')
 if (config.ip == '0.0.0.0') {
     console.warn(warn+'[w] You are running on all available IPs. This is considered bad practice and possibly dangerous, make sure you have double checked your config.')
@@ -44,14 +46,72 @@ if (config.ip == '0.0.0.0') {
     console.info(info+'[i] Running at localhost, the server will not be able to be access by other devices without tunneling.')
 };
 
+//Check if HTTP and HTTPS are disabled
+if (config.secured == false && config.keephttpon == false) {
+    console.error(errorc+'[e] Both the HTTP and HTTPS servers are disabled. Will not start - now exiting.')
+    console.info(none+'Resetting terminal colour\n[i] Killing process')
+    process.exit();
+}
 //Date/time
 var date = new Date();
 var current_hour = date.getHours();
 rdate = date+current_hour
 
-//Respond to requests with a string and get all the content and data from the request
+
 //HTTP Server
-var server = http.createServer(function(req,res) {
+var httpserver = http.createServer(function(req,res) {
+    if (config.keephttpon == true) {
+        logic(req,res)
+    }
+});
+
+//HTTPS Server
+var httpsserver = https.createServer({'key':fs.readFileSync(config.keyloc).toString('utf8'),'cert':fs.readFileSync(config.certloc).toString('utf8')},function(req,res) {
+    if (config.secured == true) {
+        logic(req,res)
+    }
+});
+
+
+//i'll make this more efficient in the future, but it doesn't impact api performance
+//Start the HTTP server
+if (config.keephttpon == true) {
+    httpserver.listen(config.httpport,config.ip,function(){
+        console.log(success+'[s] Server is listening on ',col.inverse,config.ip+':'+config.httpport,col.bg_blue,col.hicolor,'HTTP',none)
+    })
+    httpserver.on('error',function(){
+        console.error(errorc+'[e] Failed to attach to the IP or port that was specified')
+        console.warn(warn+'[w] Exiting')
+        console.warn(warn+"[w] Stopping server...")
+        httpserver.close()
+        console.warn(errorc+"[e] Server died")
+        console.info(success+"[s] Server stopped")
+        console.info(none+'Resetting terminal colour\n[i] Killing process')
+        process.exit();
+    })
+}
+
+
+//Start the HTTPS server
+if (config.secured == true) {
+    httpsserver.listen(config.httpsport,config.ip,function(){
+        console.log(success+'[s] Server is listening on ',col.inverse,config.ip+':'+config.httpsport,col.bg_blue,col.hicolor,'HTTPS',none)
+    })
+    httpsserver.on('error',function(){
+        console.error(errorc+'[e] Failed to attach to the IP or port that was specified')
+        console.warn(warn+'[w] Exiting')
+        console.warn(warn+"[w] Stopping server...")
+        httpserver.close()
+        console.warn(errorc+"[e] Server died")
+        console.info(success+"[s] Server stopped")
+        console.info(none+'Resetting terminal colour\n[i] Killing process')
+        process.exit();
+    })
+}
+
+//Instead of making http.createServer and https.createServer we can place all the code/logic from the current setup which then may be called by either one.
+//Respond to requests with a string and get all the content and data from the request
+var logic = function(req,res) {
     //Parse the req
     var reqUrl = url.parse(req.url,true);//Get the URL the user used and parse it.
 
@@ -97,7 +157,7 @@ var server = http.createServer(function(req,res) {
         handlerReq(data,function(statCode,payload,objTyp) {
             //Use the status code from the handler, or just use 200 (OK)
             statCode    = typeof(statCode) == 'number' ? statCode : 200;
-            objTyp      = typeof(objTyp) == 'string' ? objTyp   :   'application/JSON';
+            objTyp      = typeof(objTyp) == 'string' ? objTyp   :   'text/HTML';
             
             //Use the payload from the handler or return empty obj.
             //CHeck if we're using JSON/didn't define the payload type then go ahead and convert the JSON/obj into a string
@@ -126,29 +186,14 @@ var server = http.createServer(function(req,res) {
         console.log('\n'+request+`[r] Requested recieved:\n  On path: '${trimPath}'\n  Using method: ${method.toUpperCase()}\n  With query: ${JSON.stringify(queryStringObj)}\n  The headers:\n    ${JSON.stringify(headers)}\n  Payload: ${String(buffer)}\n  At time: ${new Date()+date.getHours()}`,none)
 
     });
-});
-
-//Start the server
-server.listen(config.port,config.ip,function(){
-    console.log(success+'[s] Server is listening on ',col.inverse,config.ip+':'+config.port,none)
-})
-server.on('error',function(){
-    console.error(errorc+'[e] Failed to attach to the IP or port that was specified')
-    console.warn(warn+'[w] Exiting')
-    console.warn(warn+"[w] Stopping server...")
-    server.close()
-    console.warn(errorc+"[e] Server died")
-    console.info(success+"[s] Server stopped")
-    console.info(none+'Resetting terminal colour\n[i] Killing process')
-    process.exit();
-})
-
+};
 
 /*
 Handlers
 _______________
-Sample - A demo handler
-ohnoes - A 404 handler
+Default - A default handler, also sent to during a 404.
+demojson - Is the server up? Send back JSON content to test
+demosite - Is the server up? Send back HTML content to test
 */
 var handlers = {};
 
@@ -160,37 +205,33 @@ var handlers = {};
 3rd - Type (if none specified then default to JSON. By doing this we allow other payloads like HTML or other bin. content) 
 */
 
-//Sample handler
-handlers.sample = function(data,callback) {
-    //Callback a 200 status code and a payload object for the demo
-    callback(200,{'sample':'json'});
-};
 //Check if the server is available
-handlers.up = function(data,callback) {
+handlers.demojson = function(data,callback) {
     if (data.headers['status'] == 'na') {
-        callback(200,{'ImGood':'ThanksForAsking uwu'})
-    } else if (data.headers['headers.status'] == 'na') {
-        callback(200,{'ImGood':'ThanksForAsking uwu'})
+        callback(200,{'ImGood':'ThanksForAsking uwu','LoveFrom':'DrutLounge  -  2019'})
     } else {
         callback(204)
     }
 };
+
 handlers.demosite = function(data,callback) {
     //Send a demo website
-    callback(200,"<body><h1>test</h1></body>","application/HTML")
+    callback(200,"<body><h1>test</h1></body>","text/HTML")
 }
-handlers.best = function(data,callback) {
-    callback(200,"<head><link href='https://fonts.googleapis.com/css?family=Major+Mono+Display' rel='stylesheet'></head><body><style>body, html, h1 {font-family: 'Major Mono Display', monospace;}; h3{font-family: 'Major Mono Display', monospace; font-size: 24px}</style><h1>Mar is a cutie</h1><h3>❤</h3></body",'application/HTML')
-}
+
+//Default page/cover page
+handlers.default = function(data,callback) {
+    callback(200,fs.readFileSync('Pages/index.html').toString('utf-8'),"text/HTML");
+};
+
 //Handler not found
 handlers.ohnoes = function(data,callback) {
-    callback(404);
-};
+    callback(404)
+}
 
 //A cool router
 var router = {
-    "sample" : handlers.sample,
-    "best" : handlers.best,
     "demosite"  : handlers.demosite,
-    "up"    :   handlers.up
+    "demojson"  : handlers.up,
+    "": handlers.default
 };
