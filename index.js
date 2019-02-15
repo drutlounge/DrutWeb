@@ -1,7 +1,7 @@
 // Index file for the API.
 
-// Console colors.
-const col = require('./colors.js');
+// Console colours.
+const col = require('./colours.js');
 let exitVal = 0;
 
 const log = {
@@ -11,6 +11,7 @@ const log = {
     warn: text => console.warn(`${col.background.white + col.foreground.red}[w] ${text}${col.reset + col.reset}`),
     request: text => console.log(`${col.background.black + col.foreground.yellow}[r] ${text}${col.reset + col.reset}`)
 };
+exports.log = log;
 
 // Catch exit
 process.on('SIGINT', () => {
@@ -40,8 +41,8 @@ const http = require('http'),
     url = require('url'),
     { StringDecoder } = require('string_decoder'),
     config = require('./config'),
-    fs = require('fs');
-
+    fs = require('fs'),
+    verCheck = require('./versionChecker');
 
 console.info(`\nDrutWeb-${fs.readFileSync('.git/refs/heads/master').toString('utf-8')}\nUsing mode: ${config.env}\nhttps://github.com/DrutLounge/DrutWeb\n`);
 if (config.ip == '0.0.0.0')
@@ -83,7 +84,7 @@ try {
 // Start the HTTP server
 if (config.keephttpon == true) {
     httpServer.listen(config.httpport, config.ip, function () {
-        log.success(`Server is listening on ${col.inverse}${config.ip}:${config.httpport}${col.background.blue + col.hicolor} HTTP`);
+        log.success(`Server is listening on ${col.inverse}${config.ip}:${config.httpport}${col.background.blue + col.hicolour} HTTP`);
     });
     httpServer.on('error', () => {
         log.error('Failed to attach to the IP or port that was specified.');
@@ -100,7 +101,7 @@ if (config.keephttpon == true) {
 // Start the HTTPS server
 if (config.secured == true) {
     httpsServer.listen(config.httpsport, config.ip, () => {
-        log.success(`Server is listening on ${col.inverse}${config.ip}:${config.httpsport}${col.background.blue + col.hicolor} HTTPS`);
+        log.success(`Server is listening on ${col.inverse}${config.ip}:${config.httpsport}${col.background.blue + col.hicolour} HTTPS`);
     });
     httpsServer.on('error', function () {
         log.error('Failed to attach to the IP or port that was specified');
