@@ -13,7 +13,7 @@ https.get({ host: 'api.github.com', path: '/repos/drutlounge/DrutWeb/commits/mas
         const ver = fs.readFileSync('.git/refs/heads/master').toString('utf-8')
         if (formatPath != ver.replace(/\n$/,'')) {
             log.error('AN UPDATE IS AVAILABLE. YOU SHOULD PULL CHANGES ASAP!')
-            console.log(`\nCurrent version: ${ver}x\nAvailable version: ${formatPath}x`)
+            console.log(`\nCurrent version: ${ver}\nAvailable version: ${formatPath}`)
         }
     });
 });
