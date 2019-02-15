@@ -1,7 +1,7 @@
 //global module
 module.exports = {
   reset: '\033[0m',
-  hicolor: '\033[1m',
+  hicolour: '\033[1m',
   underline: '\033[4m',
   inverse: '\033[7m',
   blink: '\x1b[5m',
