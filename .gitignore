@@ -65,3 +65,6 @@ Pages/*
 Pages/
 https/
 *.html
+.vscode
+package.json
+*eslint*
