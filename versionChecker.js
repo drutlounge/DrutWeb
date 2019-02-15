@@ -10,8 +10,10 @@ https.get({ host: 'api.github.com', path: '/repos/drutlounge/DrutWeb/commits/mas
         const parseName = url.parse(data.html_url);
         const getPath = parseName.pathname;
         const formatPath = getPath.replace(/((?!\w+$).)/g, '');
-        if (formatPath != fs.readFileSync('.git/refs/heads/master').toString('utf-8')) {
-            log.error('AN UPDATE IS AVAILABLE. YOU SHOULD PULL CHANGES ASAP!');
+        const ver = fs.readFileSync('.git/refs/heads/master').toString('utf-8')
+        if (formatPath != ver.replace(/\n$/,'')) {
+            log.error('AN UPDATE IS AVAILABLE. YOU SHOULD PULL CHANGES ASAP!')
+            console.log(`\nCurrent version: ${ver}x\nAvailable version: ${formatPath}x`)
         }
     });
 });
