@@ -168,7 +168,10 @@ var logic = function(req,res) {
                 payload = typeof(payload) == 'object' ? payload : {};
                 //Convert the payload to a string to send back to the user
                 var payloadStr  = JSON.stringify(payload);
-            }   else {
+            }   else if (objTyp.includes('image/') == true){
+                payloadStr = payload
+                var noStr = true
+            } else {
                 payloadStr = String(payload)
             };
 
@@ -179,7 +182,10 @@ var logic = function(req,res) {
             res.end(payloadStr);
     
             //Logthatshit
-            console.info('\n'+request+`[r] Request responded to:\n  Returning w/ code: ${String(statCode)}\n  With payload: ${String(payloadStr)}\n  With the type: ${objTyp}\n  At time: ${rdate}`)
+            if (noStr == true) {
+                var payloadPrint = "MAY NOT PRINT, NON STR DATA"
+            } else { var payloadPrint = payloadStr };
+            console.info('\n'+request+`[r] Request responded to:\n  Returning w/ code: ${String(statCode)}\n  With payload: ${String(payloadPrint)}\n  With the type: ${objTyp}\n  At time: ${rdate}`)
         });
 
         //Now the request has finished we want to go back to what we were doing before
@@ -197,6 +203,8 @@ _______________
 Default - A default handler, also sent to during a 404.
 demojson - Is the server up? Send back JSON content to test
 demosite - Is the server up? Send back HTML content to test
+ohnoes   - Fallback if content is not found
+favicon
 */
 var handlers = {};
 
@@ -230,11 +238,17 @@ handlers.default = function(data,callback) {
 //Handler not found
 handlers.ohnoes = function(data,callback) {
     callback(404)
+};
+
+//Favicon handler
+handlers.favicon = function(data,callback) {
+    callback(200,fs.readFileSync('Resources/DrutLounge.logo.ico'),"image/vnd.microsoft.icon")
 }
 
 //A cool router
 var router = {
     "demosite"  : handlers.demosite,
     "demojson"  : handlers.up,
-    "": handlers.default
+    "": handlers.default,
+    "favicon.ico": handlers.favicon
 };

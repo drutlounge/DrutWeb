@@ -18,7 +18,7 @@ environments.staging = {
     'httpport'  :   8080,
     'httpsport': 8081,
     'env'   :   'staging',
-    'ip'    :   '127.0.0.1',//should be localhost/private
+    'ip'    :   '0.0.0.0',//should be localhost/private
 'secured'   :   false,//doesn't need to be secured in local development
 'keephttpon':   true,//When false the HTTP server will not run if the HTTPS server is running
 'certloc' : './https/cert.pem',//HTTPS Certificate, leave default if none
